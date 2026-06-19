@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basefren — Messages</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #050F1C;
+    --navy2:  #0A1628;
+    --navy3:  #0E1F3A;
+    --blue:   #0A84FF;
+    --blue2:  #3DA2FF;
+    --blue3:  #0055CC;
+    --green:  #00C48C;
+    --red:    #FF4D4D;
+    --white:  #E8F0FF;
+    --muted:  #6B82A8;
+    --border: rgba(10,132,255,0.13);
+    --glow:   rgba(10,132,255,0.22);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    height: 100vh;
+    overflow: hidden;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(10,132,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(10,132,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none; z-index: 0;
+  }
+
+  /* TOPBAR */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0; z-index: 100;
+    height: 58px;
+    background: rgba(5,15,28,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center;
+    padding: 0 20px; gap: 16px;
+  }
+
+  .topbar-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px; font-weight: 700;
+    color: var(--white); text-decoration: none;
+    display: flex; align-items: center; gap: 7px;
+  }
+
+  .logo-dot {
+    width: 7px; height: 7px;
+    background: var(--blue); border-radius: 50%;
+    box-shadow: 0 0 7px var(--blue);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
+
+  .topbar-search {
+    flex: 1; max-width: 340px; position: relative;
+  }
+
+  .topbar-search input {
+    width: 100%; background: var(--navy2);
+    border: 1px solid var(--border); border-radius: 10px;
+    color: var(--white); font-family: 'Inter', sans-serif;
+    font-size: 13px; padding: 8px 14px 8px 36px;
+    outline: none; transition: border-color .2s, box-shadow .2s;
+  }
+  .topbar-search input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10,132,255,.1); }
+  .topbar-search input::placeholder { color: var(--muted); }
+  .topbar-search svg { position: absolute; left: 12px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+  .topbar-actions { margin-left: auto; display: flex; align-items: center; gap: 8px; }
+
+  .topbar-icon-btn {
+    width: 36px; height: 36px; border-radius: 9px;
+    background: var(--navy2); border: 1px solid var(--border);
+    color: var(--muted); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .2s; text-decoration: none; position: relative;
+  }
+  .topbar-icon-btn:hover { color: var(--white); border-color: rgba(10,132,255,.3); }
+
+  .topbar-avatar {
+    width: 34px; height: 34px; border-radius: 9px;
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; cursor: pointer;
+    border: 2px solid var(--border); transition: border-color .2s; text-decoration: none;
+  }
+  .topbar-avatar:hover { border-color: var(--blue); }
+
+  /* LAYOUT */
+  .dm-layout {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 220px 320px 1fr;
+    height: 100vh;
+    padding-top: 58px;
+  }
+
+  /* LEFT NAV */
+  .sidebar-left {
+    border-right: 1px solid var(--border);
+    padding: 24px 16px;
+    display: flex; flex-direction: column; gap: 4px;
+    overflow-y: auto;
+  }
+  .sidebar-left::-webkit-scrollbar { width: 0; }
+
+  .nav-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px; border-radius: 10px;
+    color: var(--muted); font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+    text-decoration: none; border: 1px solid transparent;
+  }
+  .nav-item:hover { color: var(--white); background: var(--navy2); }
+  .nav-item.active { color: var(--white); background: var(--navy2); border-color: var(--border); }
+  .nav-item.active svg { color: var(--blue); }
+
+  .sidebar-divider { height: 1px; background: var(--border); margin: 8px 0; }
+  .nav-section-label { font-size: 10px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase; color: var(--muted); padding: 16px 14px 6px; }
+
+  .sidebar-profile {
+    margin-top: auto; padding: 14px;
+    background: var(--navy2); border: 1px solid var(--border);
+    border-radius: 12px; display: flex; align-items: center; gap: 10px;
+    cursor: pointer; transition: border-color .2s;
+  }
+  .sidebar-profile:hover { border-color: rgba(10,132,255,.3); }
+  .sp-avatar { width: 36px; height: 36px; border-radius: 9px; background: linear-gradient(135deg,var(--blue3),var(--blue)); display: flex; align-items: center; justify-content: center; font-size: 17px; flex-shrink: 0; }
+  .sp-name { font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; color: var(--white); line-height: 1.2; }
+  .sp-handle { font-size: 11px; color: var(--muted); }
+  .sp-more { margin-left: auto; color: var(--muted); flex-shrink: 0; }
+
+  /* CONVERSATION LIST */
+  .convo-panel {
+    border-right: 1px solid var(--border);
+    display: flex; flex-direction: column;
+    overflow: hidden;
+  }
+
+  .convo-header {
+    padding: 18px 20px 14px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; justify-content: space-between;
+    flex-shrink: 0;
+  }
+
+  .convo-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px; font-weight: 700;
+  }
+
+  .new-dm-btn {
+    width: 32px; height: 32px; border-radius: 8px;
+    background: var(--blue); border: none;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .2s;
+  }
+  .new-dm-btn:hover { background: var(--blue2); box-shadow: 0 0 14px var(--glow); }
+
+  .convo-search {
+    padding: 12px 16px;
+    border-bottom: 1px solid var(--border);
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .convo-search input {
+    width: 100%; background: var(--navy2);
+    border: 1px solid var(--border); border-radius: 9px;
+    color: var(--white); font-family: 'Inter', sans-serif;
+    font-size: 13px; padding: 8px 14px 8px 34px;
+    outline: none; transition: border-color .2s;
+  }
+  .convo-search input:focus { border-color: var(--blue); }
+  .convo-search input::placeholder { color: var(--muted); }
+  .convo-search svg { position: absolute; left: 28px; top: 50%; transform: translateY(-50%); color: var(--muted); pointer-events: none; }
+
+  .convo-list { overflow-y: auto; flex: 1; }
+  .convo-list::-webkit-scrollbar { width: 0; }
+
+  .convo-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 14px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer; transition: background .15s;
+    position: relative;
+  }
+  .convo-item:hover { background: rgba(10,22,40,.7); }
+  .convo-item.active { background: var(--navy2); border-left: 2px solid var(--blue); }
+
+  .convo-avatar {
+    width: 44px; height: 44px; border-radius: 11px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 20px; flex-shrink: 0; position: relative;
+  }
+
+  .convo-online {
+    position: absolute; bottom: -1px; right: -1px;
+    width: 11px; height: 11px; background: var(--green);
+    border-radius: 50%; border: 2px solid var(--navy);
+  }
+
+  .convo-info { flex: 1; min-width: 0; }
+
+  .convo-name-row {
+    display: flex; align-items: center; justify-content: space-between;
+    margin-bottom: 2px;
+  }
+
+  .convo-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 600; color: var(--white);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+
+  .convo-time { font-size: 11px; color: var(--muted); flex-shrink: 0; }
+
+  .convo-preview {
+    font-size: 12px; color: var(--muted);
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+    max-width: 180px;
+  }
+
+  .convo-preview.unread { color: var(--white); font-weight: 500; }
+
+  .unread-badge {
+    min-width: 18px; height: 18px;
+    background: var(--blue); border-radius: 9px;
+    font-size: 10px; font-weight: 700; color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 5px; flex-shrink: 0;
+  }
+
+  /* TIP CHIP IN PREVIEW */
+  .tip-preview {
+    display: inline-flex; align-items: center; gap: 3px;
+    color: var(--green); font-size: 11px;
+  }
+
+  /* CHAT PANEL */
+  .chat-panel {
+    display: flex; flex-direction: column;
+    height: 100%; overflow: hidden;
+  }
+
+  /* CHAT HEADER */
+  .chat-header {
+    padding: 14px 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex; align-items: center; gap: 12px;
+    flex-shrink: 0; background: rgba(5,15,28,.6);
+  }
+
+  .chat-avatar {
+    width: 40px; height: 40px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; flex-shrink: 0; position: relative;
+  }
+
+  .chat-online {
+    position: absolute; bottom: -1px; right: -1px;
+    width: 10px; height: 10px; background: var(--green);
+    border-radius: 50%; border: 2px solid var(--navy);
+  }
+
+  .chat-info { flex: 1; }
+  .chat-name { font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 700; line-height: 1.2; }
+  .chat-status { font-size: 12px; color: var(--green); }
+  .chat-addr { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+
+  .chat-header-actions { display: flex; gap: 8px; }
+
+  .chat-action-btn {
+    width: 34px; height: 34px; border-radius: 8px;
+    background: var(--navy2); border: 1px solid var(--border);
+    color: var(--muted); display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .2s;
+  }
+  .chat-action-btn:hover { color: var(--white); border-color: rgba(10,132,255,.3); }
+
+  .chat-tip-btn {
+    padding: 6px 14px; border-radius: 8px;
+    background: rgba(10,132,255,.1); border: 1px solid var(--border);
+    color: var(--blue2); font-family: 'Space Grotesk', sans-serif;
+    font-size: 12px; font-weight: 600; cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .chat-tip-btn:hover { background: rgba(10,132,255,.18); border-color: var(--blue); box-shadow: 0 0 10px var(--glow); }
+
+  /* CHAT MESSAGES */
+  .chat-messages {
+    flex: 1; overflow-y: auto;
+    padding: 20px 20px 8px;
+    display: flex; flex-direction: column; gap: 4px;
+    scroll-behavior: smooth;
+  }
+  .chat-messages::-webkit-scrollbar { width: 0; }
+
+  /* DATE DIVIDER */
+  .date-divider {
+    display: flex; align-items: center; gap: 12px;
+    margin: 16px 0 12px;
+  }
+  .date-divider::before, .date-divider::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+  .date-divider span { font-size: 11px; color: var(--muted); font-weight: 600; white-space: nowrap; }
+
+  /* MESSAGES */
+  .msg-row {
+    display: flex; gap: 10px;
+    margin-bottom: 2px;
+  }
+  .msg-row.me { flex-direction: row-reverse; }
+
+  .msg-avatar {
+    width: 32px; height: 32px; border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 15px; flex-shrink: 0; align-self: flex-end;
+  }
+
+  .msg-row.me .msg-avatar { display: none; }
+
+  .msg-bubble {
+    max-width: 68%;
+    padding: 10px 14px;
+    border-radius: 16px;
+    font-size: 14px; line-height: 1.55;
+    word-break: break-word;
+    position: relative;
+  }
+
+  .msg-row:not(.me) .msg-bubble {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-bottom-left-radius: 4px;
+    color: var(--white);
+  }
+
+  .msg-row.me .msg-bubble {
+    background: var(--blue);
+    border-bottom-right-radius: 4px;
+    color: #fff;
+  }
+
+  .msg-time {
+    font-size: 10px; color: var(--muted);
+    margin-top: 4px; text-align: right;
+  }
+  .msg-row:not(.me) .msg-time { text-align: left; }
+
+  /* TIP MESSAGE */
+  .tip-msg {
+    display: flex; align-items: center; gap: 10px;
+    background: rgba(0,196,140,.08);
+    border: 1px solid rgba(0,196,140,.2);
+    border-radius: 12px; padding: 12px 14px;
+    max-width: 260px;
+  }
+  .tip-msg-icon { font-size: 22px; }
+  .tip-msg-label { font-size: 11px; color: var(--muted); }
+  .tip-msg-amount { font-family: 'JetBrains Mono', monospace; font-size: 15px; font-weight: 600; color: var(--green); }
+  .tip-msg-hash { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); margin-top: 2px; }
+
+  /* TYPING INDICATOR */
+  .typing-indicator {
+    display: flex; align-items: center; gap: 10px;
+    padding: 4px 0; opacity: 0;
+    transition: opacity .3s;
+  }
+  .typing-indicator.show { opacity: 1; }
+  .typing-dots { display: flex; gap: 4px; }
+  .typing-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+    background: var(--muted);
+    animation: typingBounce 1.2s ease-in-out infinite;
+  }
+  .typing-dot:nth-child(2) { animation-delay: .2s; }
+  .typing-dot:nth-child(3) { animation-delay: .4s; }
+  @keyframes typingBounce { 0%,60%,100%{transform:translateY(0)} 30%{transform:translateY(-6px)} }
+  .typing-name { font-size: 12px; color: var(--muted); }
+
+  /* CHAT INPUT */
+  .chat-input-wrap {
+    padding: 14px 20px;
+    border-top: 1px solid var(--border);
+    background: rgba(5,15,28,.6);
+    flex-shrink: 0;
+  }
+
+  .chat-input-row {
+    display: flex; align-items: flex-end; gap: 10px;
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 14px; padding: 8px 8px 8px 16px;
+    transition: border-color .2s, box-shadow .2s;
+  }
+  .chat-input-row:focus-within { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10,132,255,.08); }
+
+  .chat-input-row textarea {
+    flex: 1; background: transparent; border: none; outline: none;
+    color: var(--white); font-family: 'Inter', sans-serif;
+    font-size: 14px; line-height: 1.5; resize: none;
+    max-height: 120px; min-height: 24px;
+  }
+  .chat-input-row textarea::placeholder { color: var(--muted); }
+
+  .chat-tools {
+    display: flex; align-items: center; gap: 4px;
+  }
+
+  .chat-tool {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: transparent; border: none;
+    color: var(--muted); font-size: 16px;
+    display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .18s;
+  }
+  .chat-tool:hover { color: var(--blue2); background: rgba(10,132,255,.08); }
+
+  .send-btn {
+    width: 36px; height: 36px; border-radius: 9px;
+    background: var(--blue); border: none;
+    color: #fff; display: flex; align-items: center; justify-content: center;
+    cursor: pointer; transition: all .2s; flex-shrink: 0;
+  }
+  .send-btn:hover:not(:disabled) { background: var(--blue2); box-shadow: 0 0 14px var(--glow); }
+  .send-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* EMPTY STATE */
+  .empty-chat {
+    flex: 1; display: flex; flex-direction: column;
+    align-items: center; justify-content: center;
+    text-align: center; padding: 40px;
+  }
+  .empty-icon { font-size: 56px; margin-bottom: 20px; }
+  .empty-title { font-family: 'Space Grotesk', sans-serif; font-size: 20px; font-weight: 700; margin-bottom: 8px; }
+  .empty-sub { font-size: 14px; color: var(--muted); line-height: 1.6; max-width: 280px; }
+  .new-msg-btn {
+    margin-top: 24px; padding: 11px 24px; border-radius: 10px;
+    background: var(--blue); border: none;
+    color: #fff; font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px; font-weight: 600; cursor: pointer; transition: all .2s;
+  }
+  .new-msg-btn:hover { background: var(--blue2); box-shadow: 0 0 18px var(--glow); }
+
+  /* TIP MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6); backdrop-filter: blur(8px);
+    z-index: 200; display: flex; align-items: center; justify-content: center;
+    opacity: 0; pointer-events: none; transition: opacity .2s;
+  }
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+  .modal {
+    background: var(--navy2); border: 1px solid var(--border);
+    border-radius: 20px; padding: 32px; width: 360px; max-width: 94vw;
+    transform: scale(.95) translateY(8px);
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  }
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+  .modal-title { font-family: 'Space Grotesk', sans-serif; font-size: 18px; font-weight: 700; margin-bottom: 18px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-close { width: 28px; height: 28px; border-radius: 7px; background: var(--navy3); border: 1px solid var(--border); color: var(--muted); cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 14px; transition: all .2s; }
+  .modal-close:hover { color: var(--white); }
+  .modal-to { display: flex; align-items: center; gap: 10px; padding: 12px; background: var(--navy3); border-radius: 10px; margin-bottom: 20px; border: 1px solid var(--border); }
+  .modal-to-name { font-family: 'Space Grotesk', sans-serif; font-size: 14px; font-weight: 600; }
+  .modal-to-addr { font-family: 'JetBrains Mono', monospace; font-size: 10px; color: var(--muted); }
+  .tip-amounts { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; margin-bottom: 14px; }
+  .tip-amt { padding: 10px 6px; border-radius: 9px; border: 1px solid var(--border); background: var(--navy3); color: var(--muted); font-family: 'Space Grotesk', sans-serif; font-size: 13px; font-weight: 600; cursor: pointer; transition: all .18s; text-align: center; }
+  .tip-amt:hover { border-color: var(--blue); color: var(--white); }
+  .tip-amt.selected { border-color: var(--blue); background: rgba(10,132,255,.12); color: var(--blue2); box-shadow: 0 0 10px var(--glow); }
+  .tip-input-wrap { position: relative; margin-bottom: 20px; }
+  .tip-input-wrap .prefix { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-family: 'JetBrains Mono', monospace; font-size: 13px; color: var(--muted); }
+  .tip-input-wrap input { width: 100%; background: var(--navy3); border: 1px solid var(--border); border-radius: 10px; color: var(--white); font-family: 'JetBrains Mono', monospace; font-size: 14px; padding: 11px 14px 11px 48px; outline: none; transition: border-color .2s; }
+  .tip-input-wrap input:focus { border-color: var(--blue); }
+  .tip-suffix { position: absolute; right: 14px; top: 50%; transform: translateY(-50%); font-size: 12px; color: var(--muted); font-weight: 600; }
+  .tip-send-btn { width: 100%; background: var(--blue); color: #fff; font-family: 'Space Grotesk', sans-serif; font-size: 15px; font-weight: 600; padding: 13px; border-radius: 10px; border: none; cursor: pointer; transition: all .2s; }
+  .tip-send-btn:hover { background: var(--blue2); box-shadow: 0 0 24px var(--glow); }
+
+  /* TOAST */
+  .toast {
+    position: fixed; bottom: 24px; right: 24px;
+    background: var(--navy2); border: 1px solid var(--border);
+    border-radius: 12px; padding: 12px 18px;
+    font-size: 13px; font-weight: 500;
+    display: flex; align-items: center; gap: 8px;
+    z-index: 999; transform: translateY(72px); opacity: 0;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4); max-width: 300px;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(0,196,140,.3); }
+
+  /* MOBILE */
+  .mobile-nav {
+    display: none; position: fixed; bottom: 0; left: 0; right: 0;
+    z-index: 100; background: rgba(5,15,28,.95); backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border); padding: 8px 0 env(safe-area-inset-bottom);
+    justify-content: space-around;
+  }
+  .mobile-nav-item { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 6px 16px; color: var(--muted); font-size: 10px; font-weight: 600; cursor: pointer; transition: color .2s; text-decoration: none; }
+  .mobile-nav-item.active { color: var(--blue); }
+  .mobile-nav-item svg { width: 20px; height: 20px; }
+
+  @media (max-width: 1024px) {
+    .dm-layout { grid-template-columns: 64px 280px 1fr; }
+    .nav-item span { display: none; }
+    .nav-section-label { display: none; }
+    .sidebar-profile .sp-name, .sidebar-profile .sp-handle, .sidebar-profile .sp-more { display: none; }
+    .sidebar-left { padding: 16px 8px; align-items: center; }
+    .nav-item { padding: 10px; justify-content: center; }
+    .sidebar-profile { padding: 8px; justify-content: center; }
+  }
+
+  @media (max-width: 768px) {
+    body { overflow: auto; }
+    .dm-layout { grid-template-columns: 1fr; height: auto; padding-bottom: 64px; }
+    .sidebar-left { display: none; }
+    .convo-panel { height: calc(100vh - 58px - 64px); }
+    .chat-panel { height: calc(100vh - 58px - 64px); }
+    .mobile-nav { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <span class="logo-dot"></span>
+    Basefren
+  </a>
+  <div class="topbar-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search frens, posts, tokens...">
+  </div>
+  <div class="topbar-actions">
+    <a href="#" class="topbar-icon-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+    </a>
+    <a href="profile.html" class="topbar-avatar">🐸</a>
+  </div>
+</header>
+
+<div class="dm-layout">
+
+  <!-- LEFT NAV -->
+  <aside class="sidebar-left">
+    <a href="feed.html" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.707 2.293a1 1 0 0 0-1.414 0l-7 7a1 1 0 0 0 1.414 1.414L4 10.414V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6.586l.293.293a1 1 0 0 0 1.414-1.414l-7-7z"/></svg>
+      <span>Feed</span>
+    </a>
+    <a href="explore.html" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span>Explore</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Notifications</span>
+    </a>
+    <a href="dm.html" class="nav-item active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Messages</span>
+    </a>
+    <div class="sidebar-divider"></div>
+    <div class="nav-section-label">On-chain</div>
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Wallet</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <span>Activity</span>
+    </a>
+    <div class="sidebar-divider"></div>
+    <a href="profile.html" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>Settings</span>
+    </a>
+    <div style="flex:1"></div>
+    <a href="profile.html" class="sidebar-profile">
+      <div class="sp-avatar">🐸</div>
+      <div><div class="sp-name">crypt0fren</div><div class="sp-handle">@crypt0fren</div></div>
+      <div class="sp-more"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg></div>
+    </a>
+  </aside>
+
+  <!-- CONVERSATION LIST -->
+  <div class="convo-panel">
+    <div class="convo-header">
+      <div class="convo-title">Messages</div>
+      <button class="new-dm-btn" onclick="showToast('New DM coming soon','info')" title="New message">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      </button>
+    </div>
+    <div class="convo-search">
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <input type="text" placeholder="Search messages..." oninput="filterConvos(this.value)">
+    </div>
+    <div class="convo-list" id="convoList"></div>
+  </div>
+
+  <!-- CHAT PANEL -->
+  <div class="chat-panel" id="chatPanel">
+    <div class="empty-chat" id="emptyChat">
+      <div class="empty-icon">💬</div>
+      <div class="empty-title">Your messages</div>
+      <p class="empty-sub">Send a tip, share alpha, or just say gm — pick a conversation to start.</p>
+      <button class="new-msg-btn" onclick="openConvo(0)">Start chatting</button>
+    </div>
+  </div>
+
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <a href="feed.html" class="mobile-nav-item">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.707 2.293a1 1 0 0 0-1.414 0l-7 7a1 1 0 0 0 1.414 1.414L4 10.414V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6.586l.293.293a1 1 0 0 0 1.414-1.414l-7-7z"/></svg>
+    Feed
+  </a>
+  <a href="explore.html" class="mobile-nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Explore
+  </a>
+  <a href="dm.html" class="mobile-nav-item active">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    DMs
+  </a>
+  <a href="profile.html" class="mobile-nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </a>
+</nav>
+
+<!-- TIP MODAL -->
+<div class="modal-overlay" id="tipModal" onclick="if(event.target===this)closeTipModal()">
+  <div class="modal">
+    <div class="modal-title">
+      ⚡ Send a tip
+      <button class="modal-close" onclick="closeTipModal()">✕</button>
+    </div>
+    <div class="modal-to">
+      <span id="tipToEmoji" style="font-size:22px">🧙</span>
+      <div>
+        <div class="modal-to-name" id="tipToName">@defiwizard</div>
+        <div class="modal-to-addr" id="tipToAddr">0xA4F1...9B3C</div>
+      </div>
+    </div>
+    <div class="tip-amounts">
+      <div class="tip-amt" onclick="selAmt(this,'0.001')">0.001</div>
+      <div class="tip-amt selected" onclick="selAmt(this,'0.005')">0.005</div>
+      <div class="tip-amt" onclick="selAmt(this,'0.01')">0.01</div>
+      <div class="tip-amt" onclick="selAmt(this,'0.05')">0.05</div>
+      <div class="tip-amt" onclick="selAmt(this,'0.1')">0.1</div>
+      <div class="tip-amt" onclick="selAmt(this,'custom')">Custom</div>
+    </div>
+    <div class="tip-input-wrap">
+      <span class="prefix">ETH</span>
+      <input type="number" id="tipAmt" value="0.005" step="0.001" min="0.001">
+      <span class="tip-suffix" id="tipUsd">≈ $17.11</span>
+    </div>
+    <button class="tip-send-btn" onclick="sendTip()">⚡ Send tip on Base</button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────
+const CONVOS = [
+  {
+    id:0, emoji:'🧙', name:'Defi Wizard', handle:'defiwizard',
+    addr:'0xA4F1...9B3C', online:true, unread:2,
+    preview:'bro that alpha was insane 🔥',
+    messages:[
+      { me:false, text:'gm fren! did you see the Base announcement?', time:'9:00 AM' },
+      { me:true,  text:'gm! yeah just caught it. massive for the ecosystem 🔵', time:'9:02 AM' },
+      { me:false, text:'gonna deploy my contract on Base this week. gas fees are literally nothing', time:'9:05 AM' },
+      { me:true,  text:'gas, finally! what are you building?', time:'9:06 AM' },
+      { me:false, text:'yield optimizer. will drop the alpha here first before tweeting', time:'9:10 AM' },
+      { me:true,  text:'👀 say less, I\'m in', time:'9:11 AM' },
+      { me:false, type:'tip', amount:'0.05 ETH', usd:'$171.08', hash:'0x7f3a...9c1e', text:'for the support fren ⚡', time:'9:15 AM' },
+      { me:false, text:'bro that alpha was insane 🔥', time:'9:18 AM' },
+    ]
+  },
+  {
+    id:1, emoji:'🦋', name:'0xLuna', handle:'lunaweb3',
+    addr:'0xA4F2...7C8D', online:true, unread:0,
+    preview:'seen your profile on Basefren, dope!',
+    messages:[
+      { me:false, text:'hey! seen your profile on Basefren, dope!', time:'Yesterday' },
+      { me:true,  text:'thanks!! just set it up. the wallet auto-gen is crazy convenient', time:'Yesterday' },
+      { me:false, text:'right?? no seed phrase no drama. this is how onboarding should work', time:'Yesterday' },
+      { me:true,  text:'100%. sharing my profile link everywhere now 😂', time:'Yesterday' },
+      { me:false, text:'same lol. also tipped a creator directly from their post. so smooth', time:'Yesterday' },
+    ]
+  },
+  {
+    id:2, emoji:'🐉', name:'drgn.base', handle:'drgnbase',
+    addr:'0xB1C2...7D8E', online:false, unread:1,
+    preview:'⚡ 0.01 ETH tip received',
+    messages:[
+      { me:true,  text:'yo quick question — did you use Privy or Web3Auth for the wallet integration?', time:'Mon' },
+      { me:false, text:'Privy all day. SDK is clean, docs are good', time:'Mon' },
+      { me:true,  text:'bet, trying it out rn', time:'Mon' },
+      { me:false, type:'tip', amount:'0.01 ETH', usd:'$34.22', hash:'0x2b9c...4d7f', text:'good luck fren 🐉', time:'Mon' },
+    ]
+  },
+  {
+    id:3, emoji:'🤖', name:'BaseBot9000', handle:'basebot',
+    addr:'0xC3D2...1A7E', online:true, unread:0,
+    preview:'📊 Weekly Base stats are ready',
+    messages:[
+      { me:false, text:'📊 Your weekly Base stats: 12 posts, 432 likes, 2.1K impressions', time:'Sun' },
+      { me:false, text:'🔥 Your best post got 201 likes! Keep posting fren', time:'Sun' },
+      { me:true,  text:'thanks bot!', time:'Sun' },
+    ]
+  },
+  {
+    id:4, emoji:'👾', name:'pixelfren', handle:'pixelfren',
+    addr:'0x9A8B...2E3F', online:false, unread:0,
+    preview:'we should collab on something!',
+    messages:[
+      { me:false, text:'saw your feed, love the vibe!', time:'Sat' },
+      { me:true,  text:'same! your pixel art NFTs are 🔥', time:'Sat' },
+      { me:false, text:'we should collab on something!', time:'Sat' },
+      { me:true,  text:'definitely down. let\'s talk next week', time:'Sat' },
+    ]
+  },
+];
+
+let activeConvo = null;
+let typingTimer = null;
+
+// ── RENDER CONVOS ─────────────────────────────────────────────
+function renderConvos(list) {
+  document.getElementById('convoList').innerHTML = list.map(c => {
+    const isActive = activeConvo && activeConvo.id === c.id;
+    const lastMsg  = c.messages[c.messages.length - 1];
+    let preview = c.preview;
+    if (lastMsg?.type === 'tip') preview = `⚡ ${lastMsg.amount} tip`;
+
+    return `
+      <div class="convo-item ${isActive ? 'active' : ''}" onclick="openConvo(${c.id})">
+        <div class="convo-avatar" style="background:${avatarBg(c.emoji)}">
+          ${c.emoji}
+          ${c.online ? '<div class="convo-online"></div>' : ''}
+        </div>
+        <div class="convo-info">
+          <div class="convo-name-row">
+            <div class="convo-name">${c.name}</div>
+            <div class="convo-time">${lastMsg?.time || ''}</div>
+          </div>
+          <div class="convo-preview ${c.unread ? 'unread' : ''}">${preview}</div>
+        </div>
+        ${c.unread ? `<div class="unread-badge">${c.unread}</div>` : ''}
+      </div>`;
+  }).join('');
+}
+
+// ── OPEN CONVO ────────────────────────────────────────────────
+function openConvo(id) {
+  activeConvo = CONVOS.find(c => c.id === id);
+  if (!activeConvo) return;
+  activeConvo.unread = 0;
+  renderConvos(CONVOS);
+  renderChat(activeConvo);
+}
+
+// ── RENDER CHAT ──────────────────────────────────────────────
+function renderChat(convo) {
+  const panel = document.getElementById('chatPanel');
+
+  panel.innerHTML = `
+    <!-- CHAT HEADER -->
+    <div class="chat-header">
+      <div class="chat-avatar" style="background:${avatarBg(convo.emoji)}">
+        ${convo.emoji}
+        ${convo.online ? '<div class="chat-online"></div>' : ''}
+      </div>
+      <div class="chat-info">
+        <div class="chat-name">${convo.name}</div>
+        <div class="${convo.online ? 'chat-status' : 'chat-addr'}">${convo.online ? '● Online' : 'Last seen recently'}</div>
+        <div class="chat-addr">${convo.addr}</div>
+      </div>
+      <div class="chat-header-actions">
+        <button class="chat-tip-btn" onclick="openTipModal('${convo.emoji}','${convo.handle}','${convo.addr}')">⚡ Tip</button>
+        <button class="chat-action-btn" onclick="showToast('Profile coming soon','info')" title="View profile">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+        </button>
+        <button class="chat-action-btn" onclick="showToast('More options coming soon','info')" title="More">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- MESSAGES -->
+    <div class="chat-messages" id="chatMessages">
+      <div class="date-divider"><span>Today</span></div>
+      ${renderMessages(convo.messages)}
+      <div class="typing-indicator" id="typingIndicator">
+        <div class="msg-avatar" style="background:${avatarBg(convo.emoji)}">${convo.emoji}</div>
+        <div class="typing-dots">
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+          <div class="typing-dot"></div>
+        </div>
+        <div class="typing-name">${convo.name} is typing...</div>
+      </div>
+    </div>
+
+    <!-- INPUT -->
+    <div class="chat-input-wrap">
+      <div class="chat-input-row">
+        <textarea id="chatInput" placeholder="Message ${convo.name}..." rows="1"
+          oninput="autoResize(this); updateSendBtn()"
+          onkeydown="handleEnter(event)"></textarea>
+        <div class="chat-tools">
+          <button class="chat-tool" title="Emoji" onclick="insertEmoji()">😄</button>
+          <button class="chat-tool" title="Attach" onclick="showToast('Attachments coming soon','info')">📎</button>
+          <button class="chat-tool" title="Tip" onclick="openTipModal('${convo.emoji}','${convo.handle}','${convo.addr}')">⚡</button>
+        </div>
+        <button class="send-btn" id="sendBtn" onclick="sendMessage()" disabled>
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
+        </button>
+      </div>
+    </div>
+  `;
+
+  scrollToBottom();
+}
+
+// ── RENDER MESSAGES ───────────────────────────────────────────
+function renderMessages(messages) {
+  let html = '';
+  messages.forEach(m => {
+    if (m.type === 'tip') {
+      html += `
+        <div class="msg-row ${m.me ? 'me' : ''}">
+          ${!m.me ? `<div class="msg-avatar" style="background:${avatarBg(activeConvo.emoji)}">${activeConvo.emoji}</div>` : ''}
+          <div>
+            <div class="tip-msg">
+              <div class="tip-msg-icon">⚡</div>
+              <div>
+                <div class="tip-msg-label">Tip sent on Base</div>
+                <div class="tip-msg-amount">${m.amount}</div>
+                <div class="tip-msg-hash">${m.hash} · ${m.usd}</div>
+              </div>
+            </div>
+            ${m.text ? `<div class="msg-bubble" style="margin-top:6px;${m.me?'background:var(--blue);color:#fff':''}">${m.text}</div>` : ''}
+            <div class="msg-time">${m.time}</div>
+          </div>
+        </div>`;
+    } else {
+      html += `
+        <div class="msg-row ${m.me ? 'me' : ''}">
+          ${!m.me ? `<div class="msg-avatar" style="background:${avatarBg(activeConvo.emoji)}">${activeConvo.emoji}</div>` : ''}
+          <div>
+            <div class="msg-bubble">${m.text}</div>
+            <div class="msg-time">${m.time}</div>
+          </div>
+        </div>`;
+    }
+  });
+  return html;
+}
+
+// ── SEND MESSAGE ─────────────────────────────────────────────
+function sendMessage() {
+  const input = document.getElementById('chatInput');
+  const text  = input.value.trim();
+  if (!text || !activeConvo) return;
+
+  const now = new Date();
+  const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0') + ' ' + (now.getHours() >= 12 ? 'PM' : 'AM');
+
+  activeConvo.messages.push({ me:true, text, time });
+  activeConvo.preview = text;
+  input.value = '';
+  input.style.height = 'auto';
+  document.getElementById('sendBtn').disabled = true;
+
+  const msgContainer = document.getElementById('chatMessages');
+  const typing = document.getElementById('typingIndicator');
+  msgContainer.insertAdjacentHTML('beforeend', `
+    <div class="msg-row me">
+      <div>
+        <div class="msg-bubble">${text}</div>
+        <div class="msg-time">${time}</div>
+      </div>
+    </div>`);
+
+  scrollToBottom();
+  renderConvos(CONVOS);
+
+  // Simulate reply
+  if (activeConvo.online && Math.random() > 0.3) {
+    setTimeout(() => {
+      const ti = document.getElementById('typingIndicator');
+      if (ti) ti.classList.add('show');
+      scrollToBottom();
+    }, 800);
+
+    const replies = [
+      'frrrr 🔵', 'based 🐸', 'let\'s goo!', 'no cap', 'sending alpha rn',
+      'wagmi fren', 'gas fees are literally free bro', '👀 say less',
+      'gm gm', 'based and bluepilled', 'on-chain or nothing',
+    ];
+
+    setTimeout(() => {
+      const ti = document.getElementById('typingIndicator');
+      if (ti) ti.classList.remove('show');
+
+      const reply = replies[Math.floor(Math.random() * replies.length)];
+      const replyTime = new Date().getHours() + ':' + String(new Date().getMinutes()).padStart(2,'0') + ' PM';
+      activeConvo.messages.push({ me:false, text:reply, time:replyTime });
+      activeConvo.preview = reply;
+
+      const mc = document.getElementById('chatMessages');
+      if (mc) {
+        mc.insertAdjacentHTML('beforeend', `
+          <div class="msg-row">
+            <div class="msg-avatar" style="background:${avatarBg(activeConvo.emoji)}">${activeConvo.emoji}</div>
+            <div>
+              <div class="msg-bubble">${reply}</div>
+              <div class="msg-time">${replyTime}</div>
+            </div>
+          </div>`);
+        scrollToBottom();
+      }
+      renderConvos(CONVOS);
+    }, 2400);
+  }
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function handleEnter(e) {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault();
+    sendMessage();
+  }
+}
+
+function autoResize(el) {
+  el.style.height = 'auto';
+  el.style.height = Math.min(el.scrollHeight, 120) + 'px';
+}
+
+function updateSendBtn() {
+  const btn = document.getElementById('sendBtn');
+  const val = document.getElementById('chatInput')?.value.trim();
+  if (btn) btn.disabled = !val;
+}
+
+function scrollToBottom() {
+  setTimeout(() => {
+    const mc = document.getElementById('chatMessages');
+    if (mc) mc.scrollTop = mc.scrollHeight;
+  }, 50);
+}
+
+function filterConvos(q) {
+  const filtered = CONVOS.filter(c =>
+    c.name.toLowerCase().includes(q.toLowerCase()) ||
+    c.handle.toLowerCase().includes(q.toLowerCase())
+  );
+  renderConvos(filtered);
+}
+
+function insertEmoji() {
+  const input = document.getElementById('chatInput');
+  if (!input) return;
+  const emojis = ['🔵','🐸','⚡','🚀','💎','🔥','👀','💯'];
+  input.value += emojis[Math.floor(Math.random() * emojis.length)];
+  input.focus();
+  updateSendBtn();
+}
+
+// ── TIP MODAL ────────────────────────────────────────────────
+function openTipModal(emoji, handle, addr) {
+  document.getElementById('tipToEmoji').textContent = emoji || '🧙';
+  document.getElementById('tipToName').textContent  = '@' + (handle || 'defiwizard');
+  document.getElementById('tipToAddr').textContent  = addr  || '0xA4F1...9B3C';
+  document.getElementById('tipModal').classList.add('open');
+}
+
+function closeTipModal() { document.getElementById('tipModal').classList.remove('open'); }
+
+function selAmt(el, val) {
+  document.querySelectorAll('.tip-amt').forEach(a => a.classList.remove('selected'));
+  el.classList.add('selected');
+  if (val !== 'custom') {
+    document.getElementById('tipAmt').value = val;
+    document.getElementById('tipUsd').textContent = '≈ $' + (parseFloat(val)*3421.5).toFixed(2);
+  } else {
+    document.getElementById('tipAmt').focus();
+  }
+}
+
+document.getElementById('tipAmt').addEventListener('input', function() {
+  document.getElementById('tipUsd').textContent = '≈ $' + (parseFloat(this.value||0)*3421.5).toFixed(2);
+});
+
+function sendTip() {
+  const amt  = document.getElementById('tipAmt').value;
+  const name = document.getElementById('tipToName').textContent;
+  closeTipModal();
+
+  // Inject tip message into active chat
+  if (activeConvo) {
+    const now  = new Date();
+    const time = now.getHours() + ':' + String(now.getMinutes()).padStart(2,'0') + ' PM';
+    const hash = '0x' + Math.random().toString(16).slice(2,8) + '...' + Math.random().toString(16).slice(2,6);
+    const usd  = '$' + (parseFloat(amt)*3421.5).toFixed(2);
+
+    activeConvo.messages.push({ me:true, type:'tip', amount:amt+' ETH', usd, hash, time });
+    activeConvo.preview = `⚡ ${amt} ETH tip`;
+
+    const mc = document.getElementById('chatMessages');
+    if (mc) {
+      mc.insertAdjacentHTML('beforeend', `
+        <div class="msg-row me">
+          <div>
+            <div class="tip-msg">
+              <div class="tip-msg-icon">⚡</div>
+              <div>
+                <div class="tip-msg-label">Tip sent on Base</div>
+                <div class="tip-msg-amount">${amt} ETH</div>
+                <div class="tip-msg-hash">${hash} · ${usd}</div>
+              </div>
+            </div>
+            <div class="msg-time">${time}</div>
+          </div>
+        </div>`);
+      scrollToBottom();
+    }
+    renderConvos(CONVOS);
+  }
+
+  showToast(`Sent ${amt} ETH to ${name} ⚡`, true);
+}
+
+function avatarBg(emoji) {
+  const m = {'🧙':'linear-gradient(135deg,#6B21A8,#A855F7)','🦋':'linear-gradient(135deg,#0E7490,#22D3EE)','🤖':'linear-gradient(135deg,#0055CC,#0A84FF)','🐺':'linear-gradient(135deg,#374151,#6B7280)','🎭':'linear-gradient(135deg,#831843,#EC4899)','⚡':'linear-gradient(135deg,#92400E,#F59E0B)','🐸':'linear-gradient(135deg,#0055CC,#0A84FF)','🦊':'linear-gradient(135deg,#9A3412,#F97316)','🐉':'linear-gradient(135deg,#065F46,#10B981)','🧸':'linear-gradient(135deg,#78350F,#D97706)','👾':'linear-gradient(135deg,#312E81,#6366F1)','🤖':'linear-gradient(135deg,#0055CC,#0A84FF)'};
+  return m[emoji] || 'linear-gradient(135deg,#0055CC,#0A84FF)';
+}
+
+function showToast(msg, success=true) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent  = msg;
+  document.getElementById('toastIcon').textContent = success ? '✓' : '⚡';
+  t.className = 'toast show ' + (success?'success':'error');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+renderConvos(CONVOS);
+</script>
+</body>
+</html>

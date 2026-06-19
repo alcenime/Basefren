@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basefren — Your Web3 Social Identity</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:    #050F1C;
+    --navy2:   #0A1628;
+    --navy3:   #0E1F3A;
+    --blue:    #0A84FF;
+    --blue2:   #3DA2FF;
+    --blue3:   #0055CC;
+    --white:   #E8F0FF;
+    --muted:   #6B82A8;
+    --border:  rgba(10,132,255,0.15);
+    --glow:    rgba(10,132,255,0.25);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    line-height: 1.6;
+    overflow-x: hidden;
+  }
+
+  /* GRID OVERLAY */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(10,132,255,0.04) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(10,132,255,0.04) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* NAV */
+  nav {
+    position: fixed;
+    top: 0; left: 0; right: 0;
+    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 18px 40px;
+    background: rgba(5,15,28,0.85);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    color: var(--white);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .nav-logo .dot {
+    width: 8px; height: 8px;
+    background: var(--blue);
+    border-radius: 50%;
+    box-shadow: 0 0 8px var(--blue);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse {
+    0%, 100% { opacity: 1; transform: scale(1); }
+    50% { opacity: 0.6; transform: scale(0.85); }
+  }
+
+  .nav-links {
+    display: flex;
+    align-items: center;
+    gap: 32px;
+    list-style: none;
+  }
+
+  .nav-links a {
+    color: var(--muted);
+    text-decoration: none;
+    font-size: 14px;
+    font-weight: 500;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--white); }
+
+  .nav-cta {
+    background: var(--blue);
+    color: #fff !important;
+    padding: 8px 20px;
+    border-radius: 8px;
+    font-weight: 600 !important;
+    transition: background 0.2s, box-shadow 0.2s !important;
+  }
+
+  .nav-cta:hover {
+    background: var(--blue2) !important;
+    box-shadow: 0 0 20px var(--glow);
+    color: #fff !important;
+  }
+
+  /* HERO */
+  .hero {
+    position: relative;
+    z-index: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    padding: 120px 24px 80px;
+  }
+
+  .hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    background: rgba(10,132,255,0.1);
+    border: 1px solid var(--border);
+    color: var(--blue2);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    padding: 6px 14px;
+    border-radius: 100px;
+    margin-bottom: 32px;
+  }
+
+  .hero-badge svg {
+    width: 12px; height: 12px;
+  }
+
+  .hero h1 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(42px, 7vw, 80px);
+    font-weight: 700;
+    line-height: 1.08;
+    letter-spacing: -2px;
+    max-width: 800px;
+    margin-bottom: 24px;
+  }
+
+  .hero h1 .accent {
+    color: var(--blue);
+    position: relative;
+  }
+
+  .hero h1 .accent::after {
+    content: '';
+    position: absolute;
+    bottom: -4px; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, var(--blue), transparent);
+    border-radius: 2px;
+  }
+
+  .hero p {
+    font-size: clamp(16px, 2vw, 18px);
+    color: var(--muted);
+    max-width: 500px;
+    margin-bottom: 48px;
+    line-height: 1.7;
+  }
+
+  /* ADDRESS CARD — SIGNATURE ELEMENT */
+  .address-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 20px 28px;
+    margin-bottom: 48px;
+    display: inline-flex;
+    align-items: center;
+    gap: 16px;
+    box-shadow: 0 0 40px rgba(10,132,255,0.08);
+  }
+
+  .address-avatar {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: #fff;
+    flex-shrink: 0;
+  }
+
+  .address-info {
+    text-align: left;
+  }
+
+  .address-label {
+    font-size: 11px;
+    color: var(--muted);
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    margin-bottom: 4px;
+  }
+
+  .address-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    color: var(--blue2);
+    font-weight: 500;
+  }
+
+  .address-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 14px;
+    background: var(--blue);
+    vertical-align: middle;
+    margin-left: 2px;
+    animation: blink 1s step-end infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+  }
+
+  .address-badge {
+    font-size: 10px;
+    font-weight: 700;
+    color: #fff;
+    background: var(--blue);
+    padding: 3px 8px;
+    border-radius: 6px;
+    letter-spacing: 0.05em;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  /* HERO BUTTONS */
+  .hero-btns {
+    display: flex;
+    gap: 12px;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .btn-primary {
+    background: var(--blue);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-primary:hover {
+    background: var(--blue2);
+    box-shadow: 0 0 30px var(--glow);
+    transform: translateY(-1px);
+  }
+
+  .btn-secondary {
+    background: transparent;
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 14px 28px;
+    border-radius: 10px;
+    text-decoration: none;
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: all 0.2s;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .btn-secondary:hover {
+    border-color: var(--blue);
+    color: var(--blue2);
+    background: rgba(10,132,255,0.06);
+  }
+
+  /* STATS */
+  .stats {
+    position: relative;
+    z-index: 1;
+    display: flex;
+    justify-content: center;
+    gap: 0;
+    padding: 0 24px 80px;
+    flex-wrap: wrap;
+  }
+
+  .stat-item {
+    text-align: center;
+    padding: 24px 48px;
+    border-right: 1px solid var(--border);
+  }
+
+  .stat-item:last-child { border-right: none; }
+
+  .stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 36px;
+    font-weight: 700;
+    color: var(--white);
+    letter-spacing: -1px;
+    line-height: 1;
+    margin-bottom: 6px;
+  }
+
+  .stat-num span { color: var(--blue); }
+
+  .stat-label {
+    font-size: 13px;
+    color: var(--muted);
+    font-weight: 500;
+  }
+
+  /* SECTION */
+  section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .section-eyebrow {
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--blue);
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(28px, 4vw, 44px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    line-height: 1.15;
+    margin-bottom: 16px;
+  }
+
+  .section-sub {
+    font-size: 16px;
+    color: var(--muted);
+    max-width: 480px;
+    line-height: 1.7;
+  }
+
+  /* FEATURES */
+  .features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 2px;
+    margin-top: 56px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+  }
+
+  .feature-card {
+    background: var(--navy);
+    padding: 36px 32px;
+    transition: background 0.2s;
+  }
+
+  .feature-card:hover { background: var(--navy2); }
+
+  .feature-icon {
+    width: 48px; height: 48px;
+    background: rgba(10,132,255,0.1);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 20px;
+    font-size: 22px;
+  }
+
+  .feature-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 600;
+    margin-bottom: 10px;
+    letter-spacing: -0.3px;
+  }
+
+  .feature-desc {
+    font-size: 14px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* HOW IT WORKS */
+  .how-section {
+    padding: 80px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+  }
+
+  .steps {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 24px;
+    margin-top: 56px;
+    position: relative;
+  }
+
+  .step-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 32px 28px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .step-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 2px;
+    background: linear-gradient(90deg, var(--blue), transparent);
+  }
+
+  .step-num {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue);
+    font-weight: 500;
+    letter-spacing: 0.1em;
+    margin-bottom: 20px;
+  }
+
+  .step-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 17px;
+    font-weight: 600;
+    margin-bottom: 10px;
+  }
+
+  .step-desc {
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.7;
+  }
+
+  /* PROFILE PREVIEW */
+  .preview-section {
+    padding: 80px 24px;
+    max-width: 1100px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 60px;
+    align-items: center;
+  }
+
+  .preview-card {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    overflow: hidden;
+    box-shadow: 0 0 60px rgba(10,132,255,0.06);
+  }
+
+  .preview-header {
+    height: 80px;
+    background: linear-gradient(135deg, var(--blue3), #001F66);
+    position: relative;
+  }
+
+  .preview-avatar {
+    width: 64px; height: 64px;
+    border-radius: 14px;
+    background: linear-gradient(135deg, var(--blue), #0055CC);
+    border: 3px solid var(--navy2);
+    position: absolute;
+    bottom: -28px; left: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 24px;
+    font-weight: 700;
+  }
+
+  .preview-body {
+    padding: 40px 24px 24px;
+  }
+
+  .preview-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 20px;
+    font-weight: 700;
+    letter-spacing: -0.3px;
+    margin-bottom: 2px;
+  }
+
+  .preview-handle {
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 12px;
+  }
+
+  .preview-address-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    background: rgba(10,132,255,0.06);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 8px 12px;
+    margin-bottom: 16px;
+  }
+
+  .preview-addr-text {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    color: var(--blue2);
+    flex: 1;
+  }
+
+  .preview-copy {
+    font-size: 10px;
+    color: var(--muted);
+    cursor: pointer;
+  }
+
+  .preview-stats-row {
+    display: flex;
+    gap: 24px;
+    margin-bottom: 16px;
+  }
+
+  .preview-stat { text-align: center; }
+  .preview-stat-num {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+  .preview-stat-label { font-size: 11px; color: var(--muted); }
+
+  .preview-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 16px 0;
+  }
+
+  .preview-post {
+    background: var(--navy);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 14px;
+    font-size: 13px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 8px;
+  }
+
+  .preview-post-meta {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 8px;
+  }
+
+  .preview-post-time { font-size: 11px; color: var(--muted); }
+
+  .preview-tip-btn {
+    font-size: 11px;
+    font-weight: 600;
+    color: var(--blue);
+    background: rgba(10,132,255,0.1);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 3px 10px;
+    cursor: pointer;
+  }
+
+  /* CTA */
+  .cta-section {
+    position: relative;
+    z-index: 1;
+    padding: 80px 24px 100px;
+    text-align: center;
+  }
+
+  .cta-inner {
+    max-width: 600px;
+    margin: 0 auto;
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 24px;
+    padding: 64px 40px;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .cta-inner::before {
+    content: '';
+    position: absolute;
+    top: -60px; left: 50%; transform: translateX(-50%);
+    width: 200px; height: 200px;
+    background: radial-gradient(circle, rgba(10,132,255,0.15), transparent 70%);
+    pointer-events: none;
+  }
+
+  .cta-inner h2 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: clamp(28px, 4vw, 40px);
+    font-weight: 700;
+    letter-spacing: -1px;
+    margin-bottom: 16px;
+  }
+
+  .cta-inner p {
+    font-size: 16px;
+    color: var(--muted);
+    margin-bottom: 36px;
+    line-height: 1.7;
+  }
+
+  /* FOOTER */
+  footer {
+    position: relative;
+    z-index: 1;
+    border-top: 1px solid var(--border);
+    padding: 32px 40px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 16px;
+  }
+
+  .footer-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--white);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .footer-dot {
+    width: 6px; height: 6px;
+    background: var(--blue);
+    border-radius: 50%;
+  }
+
+  .footer-links {
+    display: flex;
+    gap: 24px;
+    list-style: none;
+  }
+
+  .footer-links a {
+    font-size: 13px;
+    color: var(--muted);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links a:hover { color: var(--white); }
+
+  .footer-copy {
+    font-size: 12px;
+    color: var(--muted);
+  }
+
+  /* RESPONSIVE */
+  @media (max-width: 768px) {
+    nav { padding: 16px 20px; }
+    .nav-links { display: none; }
+    .stat-item { padding: 20px 24px; border-right: none; border-bottom: 1px solid var(--border); }
+    .stat-item:last-child { border-bottom: none; }
+    .stats { flex-direction: column; align-items: center; }
+    .preview-section { grid-template-columns: 1fr; }
+    footer { flex-direction: column; text-align: center; }
+    .address-card { flex-direction: column; text-align: center; }
+    .address-info { text-align: center; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="dot"></span>
+    Basefren
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#how">How it works</a></li>
+    <li><a href="#profile">Profile</a></li>
+    <li><a href="#" class="nav-cta">Join now</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<section class="hero">
+  <div class="hero-badge">
+    <svg viewBox="0 0 12 12" fill="currentColor"><circle cx="6" cy="6" r="4"/></svg>
+    Built on Base Network
+  </div>
+
+  <h1>Your identity.<br>Your <span class="accent">wallet</span>.<br>Your frens.</h1>
+
+  <p>Sign up once, get your on-chain address instantly. Post, follow, chat, and tip — all in one place on Base.</p>
+
+  <!-- SIGNATURE: live address typing -->
+  <div class="address-card">
+    <div class="address-avatar">B</div>
+    <div class="address-info">
+      <div class="address-label">Your wallet address</div>
+      <div class="address-value" id="typeAddr">0x<span id="addrText"></span><span class="address-cursor"></span></div>
+    </div>
+    <div class="address-badge">AUTO-GENERATED</div>
+  </div>
+
+  <div class="hero-btns">
+    <a href="register.html" class="btn-primary">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><line x1="19" y1="8" x2="19" y2="14"/><line x1="22" y1="11" x2="16" y2="11"/></svg>
+      Create your profile
+    </a>
+    <a href="#how" class="btn-secondary">
+      See how it works
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</section>
+
+<!-- STATS -->
+<div class="stats">
+  <div class="stat-item">
+    <div class="stat-num">0<span>s</span></div>
+    <div class="stat-label">Wallet setup time</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">100<span>%</span></div>
+    <div class="stat-label">On-chain identity</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">Base</div>
+    <div class="stat-label">Network powered by</div>
+  </div>
+  <div class="stat-item">
+    <div class="stat-num">∞</div>
+    <div class="stat-label">Frens to find</div>
+  </div>
+</div>
+
+<!-- FEATURES -->
+<section id="features">
+  <div class="section-eyebrow">What you get</div>
+  <h2 class="section-title">Everything social.<br>Everything on-chain.</h2>
+  <p class="section-sub">One account. One address. Full ownership of your identity and your assets.</p>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <div class="feature-icon">👤</div>
+      <div class="feature-title">On-chain Profile</div>
+      <div class="feature-desc">Create your username, set your avatar, write your bio. Your wallet address is tied to your identity — no middleman.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">📡</div>
+      <div class="feature-title">Social Feed</div>
+      <div class="feature-desc">Post updates, share alpha, react to content. Your feed, your frens, your community — on Base.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🤝</div>
+      <div class="feature-title">Follow & Connect</div>
+      <div class="feature-desc">Follow wallets, not just accounts. See what your frens are doing on-chain and off.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">💬</div>
+      <div class="feature-title">Direct Messages</div>
+      <div class="feature-desc">Slide into any fren's DMs. Private, direct, no phone number needed — just a wallet.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">⚡</div>
+      <div class="feature-title">Token Tips</div>
+      <div class="feature-desc">Tip your favorite creators directly from their post. Real ETH, real Base tokens — instant on-chain.</div>
+    </div>
+    <div class="feature-card">
+      <div class="feature-icon">🔑</div>
+      <div class="feature-title">Auto Wallet</div>
+      <div class="feature-desc">No seed phrase. No extensions. Sign up with email and your wallet is generated instantly — secured by passkey.</div>
+    </div>
+  </div>
+</section>
+
+<!-- HOW IT WORKS -->
+<section id="how" class="how-section">
+  <div class="section-eyebrow">How it works</div>
+  <h2 class="section-title">From zero to on-chain<br>in 60 seconds.</h2>
+  <p class="section-sub">No crypto experience needed. Just sign up and go.</p>
+
+  <div class="steps">
+    <div class="step-card">
+      <div class="step-num">// 01</div>
+      <div class="step-title">Create Account</div>
+      <div class="step-desc">Sign up with your email or social login. Pick your username — this is your identity on Basefren.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">// 02</div>
+      <div class="step-title">Get Your Wallet</div>
+      <div class="step-desc">Instantly receive a Base wallet address. No install, no seed phrase. Secured by your device's passkey.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">// 03</div>
+      <div class="step-title">Set Up Profile</div>
+      <div class="step-desc">Add your avatar, bio, and links. Your profile is your on-chain card — shareable anywhere.</div>
+    </div>
+    <div class="step-card">
+      <div class="step-num">// 04</div>
+      <div class="step-title">Find Your Frens</div>
+      <div class="step-desc">Explore, follow, post, chat. Tip the creators you love directly from the feed. Welcome to Web3 social.</div>
+    </div>
+  </div>
+</section>
+
+<!-- PROFILE PREVIEW -->
+<section id="profile" class="preview-section">
+  <div>
+    <div class="section-eyebrow">Your profile</div>
+    <h2 class="section-title">One link.<br>Your whole<br>Web3 life.</h2>
+    <p class="section-sub">Share your Basefren profile anywhere. People can follow you, tip you, or DM you — all from one page.</p>
+    <br>
+    <a href="register.html" class="btn-primary" style="margin-top:8px">
+      Build your profile
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+
+  <div class="preview-card">
+    <div class="preview-header">
+      <div class="preview-avatar">🐸</div>
+    </div>
+    <div class="preview-body">
+      <div class="preview-name">crypt0fren.base</div>
+      <div class="preview-handle">@crypt0fren · Building on Base 🔵</div>
+      <div class="preview-address-row">
+        <div class="preview-addr-text">0x71C7...3F2a</div>
+        <div class="preview-copy">⧉ copy</div>
+      </div>
+      <div class="preview-stats-row">
+        <div class="preview-stat">
+          <div class="preview-stat-num">248</div>
+          <div class="preview-stat-label">Frens</div>
+        </div>
+        <div class="preview-stat">
+          <div class="preview-stat-num">1.2K</div>
+          <div class="preview-stat-label">Followers</div>
+        </div>
+        <div class="preview-stat">
+          <div class="preview-stat-num">14 ETH</div>
+          <div class="preview-stat-label">Tips received</div>
+        </div>
+      </div>
+      <div class="preview-divider"></div>
+      <div class="preview-post">
+        Just deployed my first contract on Base 🔵 The fees are insane, literally pennies. This is the future frens 🚀
+        <div class="preview-post-meta">
+          <span class="preview-post-time">2 min ago</span>
+          <span class="preview-tip-btn">⚡ Tip 0.001 ETH</span>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- CTA -->
+<div class="cta-section">
+  <div class="cta-inner">
+    <h2>Ready to join<br>your frens on Base?</h2>
+    <p>Create your profile, claim your wallet address, and start building your Web3 social presence today.</p>
+    <a href="register.html" class="btn-primary" style="font-size:16px; padding:16px 36px;">
+      Get started — it's free
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+    </a>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer>
+  <div class="footer-logo">
+    <span class="footer-dot"></span>
+    Basefren
+  </div>
+  <ul class="footer-links">
+    <li><a href="#">Twitter</a></li>
+    <li><a href="#">Discord</a></li>
+    <li><a href="#">Docs</a></li>
+    <li><a href="#">GitHub</a></li>
+  </ul>
+  <div class="footer-copy">Built on Base · © 2025 Basefren</div>
+</footer>
+
+<script>
+  // ADDRESS TYPING ANIMATION — signature element
+  const fakeAddr = "3a9F2d8C4bE1057c6D2f9A3b8E4c1D7f2A9B3C4";
+  const el = document.getElementById('addrText');
+  let i = 0;
+  let typing = true;
+
+  function typeChar() {
+    if (typing) {
+      if (i < fakeAddr.length) {
+        el.textContent += fakeAddr[i++];
+        setTimeout(typeChar, 38 + Math.random() * 30);
+      } else {
+        setTimeout(() => { typing = false; erase(); }, 2200);
+      }
+    }
+  }
+
+  function erase() {
+    if (el.textContent.length > 0) {
+      el.textContent = el.textContent.slice(0, -1);
+      setTimeout(erase, 18);
+    } else {
+      i = 0;
+      typing = true;
+      // generate slightly different addr next loop
+      setTimeout(typeChar, 600);
+    }
+  }
+
+  typeChar();
+
+  // SCROLL REVEAL
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        e.target.style.opacity = '1';
+        e.target.style.transform = 'translateY(0)';
+      }
+    });
+  }, { threshold: 0.1 });
+
+  document.querySelectorAll('.feature-card, .step-card, .preview-card, .stat-item').forEach(el => {
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(20px)';
+    el.style.transition = 'opacity 0.5s ease, transform 0.5s ease';
+    observer.observe(el);
+  });
+</script>
+</body>
+</html>

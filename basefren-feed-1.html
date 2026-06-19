@@ -1,0 +1,1581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Basefren — Feed</title>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=Inter:wght@300;400;500&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --navy:   #050F1C;
+    --navy2:  #0A1628;
+    --navy3:  #0E1F3A;
+    --blue:   #0A84FF;
+    --blue2:  #3DA2FF;
+    --blue3:  #0055CC;
+    --green:  #00C48C;
+    --red:    #FF4D4D;
+    --orange: #FF8C00;
+    --white:  #E8F0FF;
+    --muted:  #6B82A8;
+    --border: rgba(10,132,255,0.13);
+    --glow:   rgba(10,132,255,0.22);
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--navy);
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    min-height: 100vh;
+  }
+
+  body::before {
+    content: '';
+    position: fixed; inset: 0;
+    background-image:
+      linear-gradient(rgba(10,132,255,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(10,132,255,0.03) 1px, transparent 1px);
+    background-size: 60px 60px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ── TOPBAR ───────────────────────────────────── */
+  .topbar {
+    position: fixed; top: 0; left: 0; right: 0;
+    z-index: 100;
+    height: 58px;
+    background: rgba(5,15,28,0.92);
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    gap: 16px;
+  }
+
+  .topbar-logo {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--white);
+    text-decoration: none;
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    flex-shrink: 0;
+  }
+
+  .logo-dot {
+    width: 7px; height: 7px;
+    background: var(--blue);
+    border-radius: 50%;
+    box-shadow: 0 0 7px var(--blue);
+    animation: pulse 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.6;transform:scale(.85)} }
+
+  .topbar-search {
+    flex: 1;
+    max-width: 340px;
+    position: relative;
+  }
+
+  .topbar-search input {
+    width: 100%;
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 13px;
+    padding: 8px 14px 8px 36px;
+    outline: none;
+    transition: border-color .2s, box-shadow .2s;
+  }
+
+  .topbar-search input:focus { border-color: var(--blue); box-shadow: 0 0 0 3px rgba(10,132,255,.1); }
+  .topbar-search input::placeholder { color: var(--muted); }
+
+  .topbar-search svg {
+    position: absolute; left: 12px; top: 50%;
+    transform: translateY(-50%);
+    color: var(--muted);
+    pointer-events: none;
+  }
+
+  .topbar-actions {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .topbar-icon-btn {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all .2s;
+    position: relative;
+    text-decoration: none;
+  }
+
+  .topbar-icon-btn:hover { color: var(--white); border-color: rgba(10,132,255,.3); }
+
+  .notif-badge {
+    position: absolute; top: -4px; right: -4px;
+    width: 16px; height: 16px;
+    background: var(--blue);
+    border-radius: 50%;
+    font-size: 9px;
+    font-weight: 700;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 2px solid var(--navy);
+  }
+
+  .topbar-avatar {
+    width: 34px; height: 34px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    cursor: pointer;
+    border: 2px solid var(--border);
+    transition: border-color .2s;
+  }
+
+  .topbar-avatar:hover { border-color: var(--blue); }
+
+  /* ── LAYOUT ───────────────────────────────────── */
+  .app-layout {
+    position: relative; z-index: 1;
+    display: grid;
+    grid-template-columns: 220px 1fr 280px;
+    max-width: 1180px;
+    margin: 0 auto;
+    padding-top: 58px;
+    min-height: 100vh;
+  }
+
+  /* ── LEFT SIDEBAR ─────────────────────────────── */
+  .sidebar-left {
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    overflow-y: auto;
+    padding: 24px 16px;
+    border-right: 1px solid var(--border);
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sidebar-left::-webkit-scrollbar { width: 0; }
+
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 10px 14px;
+    border-radius: 10px;
+    color: var(--muted);
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .2s;
+    text-decoration: none;
+    border: 1px solid transparent;
+  }
+
+  .nav-item:hover { color: var(--white); background: var(--navy2); }
+  .nav-item.active { color: var(--white); background: var(--navy2); border-color: var(--border); }
+  .nav-item.active svg { color: var(--blue); }
+
+  .nav-item svg { flex-shrink: 0; }
+
+  .nav-section-label {
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: .1em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 16px 14px 6px;
+  }
+
+  .sidebar-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 8px 0;
+  }
+
+  /* MINI PROFILE IN SIDEBAR */
+  .sidebar-profile {
+    margin-top: auto;
+    padding: 14px;
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: border-color .2s;
+  }
+
+  .sidebar-profile:hover { border-color: rgba(10,132,255,.3); }
+
+  .sp-avatar {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .sp-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.2;
+  }
+
+  .sp-handle {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  .sp-more {
+    margin-left: auto;
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+
+  /* ── MAIN FEED ────────────────────────────────── */
+  .feed-main {
+    border-right: 1px solid var(--border);
+    min-height: calc(100vh - 58px);
+  }
+
+  /* FEED TABS */
+  .feed-tabs {
+    position: sticky;
+    top: 58px;
+    z-index: 50;
+    background: rgba(5,15,28,.92);
+    backdrop-filter: blur(16px);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+  }
+
+  .feed-tab {
+    flex: 1;
+    text-align: center;
+    padding: 16px 12px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--muted);
+    cursor: pointer;
+    transition: color .2s;
+    position: relative;
+    border: none;
+    background: none;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .feed-tab:hover { color: var(--white); }
+  .feed-tab.active { color: var(--white); }
+
+  .feed-tab.active::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 50%; transform: translateX(-50%);
+    width: 32px; height: 2px;
+    background: var(--blue);
+    border-radius: 2px 2px 0 0;
+  }
+
+  /* COMPOSER */
+  .composer {
+    padding: 20px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    gap: 12px;
+  }
+
+  .composer-avatar {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+  }
+
+  .composer-body { flex: 1; }
+
+  .composer textarea {
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--white);
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    line-height: 1.6;
+    resize: none;
+    outline: none;
+    min-height: 56px;
+    placeholder-color: var(--muted);
+  }
+
+  .composer textarea::placeholder { color: var(--muted); }
+
+  .composer-divider {
+    height: 1px;
+    background: var(--border);
+    margin: 10px 0;
+  }
+
+  .composer-footer {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .composer-tools {
+    display: flex;
+    gap: 2px;
+  }
+
+  .composer-tool {
+    width: 32px; height: 32px;
+    border-radius: 8px;
+    background: transparent;
+    border: none;
+    color: var(--blue2);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: background .2s;
+    font-size: 16px;
+  }
+
+  .composer-tool:hover { background: rgba(10,132,255,.1); }
+
+  .composer-right {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .char-count {
+    font-size: 12px;
+    color: var(--muted);
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .char-count.warn { color: var(--orange); }
+  .char-count.over { color: var(--red); }
+
+  .post-btn {
+    background: var(--blue);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 8px 18px;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .post-btn:hover:not(:disabled) { background: var(--blue2); box-shadow: 0 0 16px var(--glow); }
+  .post-btn:disabled { opacity: .4; cursor: not-allowed; }
+
+  /* POSTS */
+  .post-item {
+    padding: 18px 20px;
+    border-bottom: 1px solid var(--border);
+    transition: background .15s;
+    cursor: pointer;
+  }
+
+  .post-item:hover { background: rgba(10,22,40,.6); }
+
+  .post-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    margin-bottom: 10px;
+  }
+
+  .post-avatar {
+    width: 40px; height: 40px;
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    flex-shrink: 0;
+    position: relative;
+  }
+
+  .post-avatar-online {
+    position: absolute;
+    bottom: -2px; right: -2px;
+    width: 10px; height: 10px;
+    background: var(--green);
+    border-radius: 50%;
+    border: 2px solid var(--navy);
+  }
+
+  .post-meta { flex: 1; min-width: 0; }
+
+  .post-name-row {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+
+  .post-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--white);
+    white-space: nowrap;
+  }
+
+  .post-handle {
+    font-size: 12px;
+    color: var(--muted);
+    white-space: nowrap;
+  }
+
+  .post-time {
+    font-size: 12px;
+    color: var(--muted);
+    margin-left: auto;
+    flex-shrink: 0;
+  }
+
+  .post-badge {
+    font-size: 9px;
+    font-weight: 700;
+    padding: 2px 6px;
+    border-radius: 4px;
+    letter-spacing: .05em;
+  }
+
+  .badge-verified { background: rgba(10,132,255,.15); color: var(--blue2); }
+  .badge-whale    { background: rgba(255,140,0,.12); color: var(--orange); }
+  .badge-new      { background: rgba(0,196,140,.12); color: var(--green); }
+
+  .post-addr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 1px;
+  }
+
+  .post-content {
+    font-size: 14px;
+    line-height: 1.65;
+    color: var(--white);
+    margin-bottom: 14px;
+    word-break: break-word;
+  }
+
+  .post-content .tag {
+    color: var(--blue2);
+    cursor: pointer;
+  }
+
+  .post-content .tag:hover { text-decoration: underline; }
+
+  /* POST MEDIA */
+  .post-media {
+    border-radius: 12px;
+    overflow: hidden;
+    border: 1px solid var(--border);
+    margin-bottom: 14px;
+    background: var(--navy2);
+    padding: 14px 16px;
+  }
+
+  .post-media-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: var(--muted);
+    letter-spacing: .08em;
+    text-transform: uppercase;
+    margin-bottom: 4px;
+  }
+
+  .post-media-value {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--green);
+    font-weight: 500;
+  }
+
+  /* POST ACTIONS */
+  .post-actions {
+    display: flex;
+    align-items: center;
+    gap: 0;
+    margin-top: 4px;
+  }
+
+  .post-action {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    padding: 6px 10px;
+    border-radius: 8px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all .18s;
+    font-family: 'Inter', sans-serif;
+  }
+
+  .post-action:hover { color: var(--blue2); background: rgba(10,132,255,.08); }
+  .post-action.liked { color: var(--red); }
+  .post-action.liked:hover { background: rgba(255,77,77,.08); }
+  .post-action.reposted { color: var(--green); }
+
+  .tip-action {
+    margin-left: auto;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 5px 12px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--blue2);
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .2s;
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  .tip-action:hover {
+    background: rgba(10,132,255,.1);
+    border-color: var(--blue);
+    box-shadow: 0 0 12px var(--glow);
+  }
+
+  /* TIP MODAL */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.6);
+    backdrop-filter: blur(8px);
+    z-index: 200;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    opacity: 0; pointer-events: none;
+    transition: opacity .2s;
+  }
+
+  .modal-overlay.open { opacity: 1; pointer-events: all; }
+
+  .modal {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 20px;
+    padding: 32px;
+    width: 360px;
+    max-width: 94vw;
+    transform: scale(.95) translateY(8px);
+    transition: transform .25s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 24px 64px rgba(0,0,0,.5);
+  }
+
+  .modal-overlay.open .modal { transform: scale(1) translateY(0); }
+
+  .modal-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+  }
+
+  .modal-title {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+  }
+
+  .modal-close {
+    width: 30px; height: 30px;
+    border-radius: 8px;
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    transition: all .2s;
+  }
+
+  .modal-close:hover { color: var(--white); }
+
+  .modal-to {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 12px;
+    background: var(--navy3);
+    border-radius: 10px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border);
+  }
+
+  .modal-to-avatar { font-size: 22px; }
+
+  .modal-to-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+  }
+
+  .modal-to-addr {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    color: var(--muted);
+  }
+
+  .tip-amounts {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-bottom: 14px;
+  }
+
+  .tip-amt {
+    padding: 10px 6px;
+    border-radius: 9px;
+    border: 1px solid var(--border);
+    background: var(--navy3);
+    color: var(--muted);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s;
+    text-align: center;
+  }
+
+  .tip-amt:hover { border-color: var(--blue); color: var(--white); }
+  .tip-amt.selected { border-color: var(--blue); background: rgba(10,132,255,.12); color: var(--blue2); box-shadow: 0 0 10px var(--glow); }
+
+  .tip-custom-wrap {
+    position: relative;
+    margin-bottom: 20px;
+  }
+
+  .tip-custom-wrap .prefix {
+    position: absolute;
+    left: 14px; top: 50%;
+    transform: translateY(-50%);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    color: var(--muted);
+  }
+
+  .tip-custom-wrap input {
+    width: 100%;
+    background: var(--navy3);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    color: var(--white);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 14px;
+    padding: 11px 14px 11px 48px;
+    outline: none;
+    transition: border-color .2s;
+  }
+
+  .tip-custom-wrap input:focus { border-color: var(--blue); }
+
+  .tip-suffix {
+    position: absolute;
+    right: 14px; top: 50%;
+    transform: translateY(-50%);
+    font-size: 12px;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .tip-send-btn {
+    width: 100%;
+    background: var(--blue);
+    color: #fff;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    padding: 13px;
+    border-radius: 10px;
+    border: none;
+    cursor: pointer;
+    transition: all .2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .tip-send-btn:hover { background: var(--blue2); box-shadow: 0 0 24px var(--glow); }
+
+  /* ── RIGHT SIDEBAR ────────────────────────────── */
+  .sidebar-right {
+    position: sticky;
+    top: 58px;
+    height: calc(100vh - 58px);
+    overflow-y: auto;
+    padding: 20px 16px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+  }
+
+  .sidebar-right::-webkit-scrollbar { width: 0; }
+
+  .widget {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 14px;
+    overflow: hidden;
+  }
+
+  .widget-header {
+    padding: 14px 16px 10px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 14px;
+    font-weight: 700;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .widget-more {
+    font-size: 11px;
+    color: var(--blue2);
+    font-weight: 500;
+    cursor: pointer;
+    font-family: 'Inter', sans-serif;
+  }
+
+  /* TRENDING */
+  .trend-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .trend-item:last-child { border-bottom: none; }
+  .trend-item:hover { background: rgba(10,132,255,.05); }
+
+  .trend-tag {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    margin-bottom: 2px;
+  }
+
+  .trend-count {
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* WHO TO FOLLOW */
+  .follow-item {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+    transition: background .15s;
+  }
+
+  .follow-item:last-child { border-bottom: none; }
+  .follow-item:hover { background: rgba(10,132,255,.05); }
+
+  .follow-avatar {
+    width: 36px; height: 36px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 17px;
+    flex-shrink: 0;
+  }
+
+  .follow-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--white);
+    line-height: 1.2;
+  }
+
+  .follow-handle { font-size: 11px; color: var(--muted); }
+
+  .follow-btn {
+    margin-left: auto;
+    padding: 5px 12px;
+    border-radius: 7px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--white);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 11px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all .18s;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .follow-btn:hover { background: var(--blue); border-color: var(--blue); }
+  .follow-btn.following { background: transparent; color: var(--muted); border-color: var(--border); }
+  .follow-btn.following:hover { color: var(--red); border-color: rgba(255,77,77,.4); background: rgba(255,77,77,.06); }
+
+  /* BASE PRICE WIDGET */
+  .price-widget { padding: 14px 16px; }
+
+  .price-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 6px;
+  }
+
+  .price-token {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .price-icon {
+    width: 28px; height: 28px;
+    border-radius: 7px;
+    background: linear-gradient(135deg, var(--blue3), var(--blue));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+  }
+
+  .price-name {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  .price-ticker { font-size: 10px; color: var(--muted); }
+
+  .price-val {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 13px;
+    font-weight: 500;
+    text-align: right;
+  }
+
+  .price-change {
+    font-size: 10px;
+    font-weight: 600;
+    padding: 2px 6px;
+    border-radius: 5px;
+  }
+
+  .price-change.up { background: rgba(0,196,140,.12); color: var(--green); }
+  .price-change.down { background: rgba(255,77,77,.1); color: var(--red); }
+
+  /* TOAST */
+  .toast {
+    position: fixed;
+    bottom: 24px; right: 24px;
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px 18px;
+    font-size: 13px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    z-index: 999;
+    transform: translateY(72px);
+    opacity: 0;
+    transition: all .3s cubic-bezier(.34,1.56,.64,1);
+    box-shadow: 0 8px 32px rgba(0,0,0,.4);
+    max-width: 300px;
+  }
+
+  .toast.show { transform: translateY(0); opacity: 1; }
+  .toast.success { border-color: rgba(0,196,140,.3); }
+  .toast.error { border-color: rgba(255,77,77,.3); }
+
+  /* LOAD MORE */
+  .load-more {
+    padding: 20px;
+    text-align: center;
+  }
+
+  .load-more-btn {
+    background: var(--navy2);
+    border: 1px solid var(--border);
+    color: var(--blue2);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 13px;
+    font-weight: 600;
+    padding: 10px 24px;
+    border-radius: 9px;
+    cursor: pointer;
+    transition: all .2s;
+  }
+
+  .load-more-btn:hover { border-color: var(--blue); background: rgba(10,132,255,.06); }
+
+  /* MOBILE NAV */
+  .mobile-nav {
+    display: none;
+    position: fixed;
+    bottom: 0; left: 0; right: 0;
+    z-index: 100;
+    background: rgba(5,15,28,.95);
+    backdrop-filter: blur(20px);
+    border-top: 1px solid var(--border);
+    padding: 8px 0 env(safe-area-inset-bottom);
+    justify-content: space-around;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 3px;
+    padding: 6px 16px;
+    color: var(--muted);
+    font-size: 10px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: color .2s;
+    text-decoration: none;
+  }
+
+  .mobile-nav-item.active { color: var(--blue); }
+  .mobile-nav-item svg { width: 20px; height: 20px; }
+
+  /* RESPONSIVE */
+  @media (max-width: 1024px) {
+    .app-layout { grid-template-columns: 64px 1fr 240px; }
+    .nav-item span { display: none; }
+    .nav-section-label { display: none; }
+    .sidebar-profile .sp-name,
+    .sidebar-profile .sp-handle,
+    .sidebar-profile .sp-more { display: none; }
+    .sidebar-left { padding: 16px 8px; align-items: center; }
+    .nav-item { padding: 10px; justify-content: center; }
+    .sidebar-profile { padding: 8px; justify-content: center; }
+  }
+
+  @media (max-width: 768px) {
+    .app-layout { grid-template-columns: 1fr; padding-bottom: 64px; }
+    .sidebar-left { display: none; }
+    .sidebar-right { display: none; }
+    .mobile-nav { display: flex; }
+  }
+</style>
+</head>
+<body>
+
+<!-- TOPBAR -->
+<header class="topbar">
+  <a href="index.html" class="topbar-logo">
+    <span class="logo-dot"></span>
+    Basefren
+  </a>
+
+  <div class="topbar-search">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    <input type="text" placeholder="Search frens, posts, tokens...">
+  </div>
+
+  <div class="topbar-actions">
+    <a href="#" class="topbar-icon-btn" title="Notifications">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span class="notif-badge">3</span>
+    </a>
+    <a href="dm.html" class="topbar-icon-btn" title="Messages">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    </a>
+    <a href="profile.html" class="topbar-avatar" title="Profile">🐸</a>
+  </div>
+</header>
+
+<!-- LAYOUT -->
+<div class="app-layout">
+
+  <!-- LEFT SIDEBAR -->
+  <aside class="sidebar-left">
+    <a href="feed.html" class="nav-item active">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M10.707 2.293a1 1 0 0 0-1.414 0l-7 7a1 1 0 0 0 1.414 1.414L4 10.414V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6.586l.293.293a1 1 0 0 0 1.414-1.414l-7-7z"/></svg>
+      <span>Feed</span>
+    </a>
+    <a href="explore.html" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+      <span>Explore</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+      <span>Notifications</span>
+    </a>
+    <a href="dm.html" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+      <span>Messages</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+    <div class="nav-section-label">On-chain</div>
+
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"/></svg>
+      <span>Wallet</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+      <span>Activity</span>
+    </a>
+
+    <div class="sidebar-divider"></div>
+
+    <a href="profile.html" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <span>Profile</span>
+    </a>
+    <a href="#" class="nav-item">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14"/><path d="M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>
+      <span>Settings</span>
+    </a>
+
+    <div style="flex:1"></div>
+
+    <a href="profile.html" class="sidebar-profile">
+      <div class="sp-avatar">🐸</div>
+      <div>
+        <div class="sp-name">crypt0fren</div>
+        <div class="sp-handle">@crypt0fren</div>
+      </div>
+      <div class="sp-more">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="1"/><circle cx="19" cy="12" r="1"/><circle cx="5" cy="12" r="1"/></svg>
+      </div>
+    </a>
+  </aside>
+
+  <!-- MAIN FEED -->
+  <main class="feed-main">
+
+    <!-- TABS -->
+    <div class="feed-tabs">
+      <button class="feed-tab active" onclick="switchTab(this,'for-you')">For you</button>
+      <button class="feed-tab" onclick="switchTab(this,'following')">Following</button>
+      <button class="feed-tab" onclick="switchTab(this,'onchain')">On-chain</button>
+      <button class="feed-tab" onclick="switchTab(this,'tips')">Tips</button>
+    </div>
+
+    <!-- COMPOSER -->
+    <div class="composer">
+      <div class="composer-avatar">🐸</div>
+      <div class="composer-body">
+        <textarea id="composerText" placeholder="What's on your mind, fren?" maxlength="280" oninput="updateComposer(this)"></textarea>
+        <div class="composer-divider"></div>
+        <div class="composer-footer">
+          <div class="composer-tools">
+            <button class="composer-tool" title="Image" onclick="showToast('Image upload coming soon','info')">🖼️</button>
+            <button class="composer-tool" title="Link" onclick="showToast('Link preview coming soon','info')">🔗</button>
+            <button class="composer-tool" title="Token" onclick="showToast('Tag a token coming soon','info')">🪙</button>
+            <button class="composer-tool" title="Location" onclick="showToast('Location coming soon','info')">📍</button>
+          </div>
+          <div class="composer-right">
+            <span class="char-count" id="charCount">280</span>
+            <button class="post-btn" id="postBtn" onclick="submitPost()" disabled>Post</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- POSTS -->
+    <div id="feedPosts"></div>
+
+    <div class="load-more">
+      <button class="load-more-btn" onclick="loadMore()">Load more posts</button>
+    </div>
+
+  </main>
+
+  <!-- RIGHT SIDEBAR -->
+  <aside class="sidebar-right">
+
+    <!-- PRICE WIDGET -->
+    <div class="widget">
+      <div class="widget-header">
+        Base Network
+        <span class="widget-more">Live</span>
+      </div>
+      <div class="price-widget">
+        <div class="price-row">
+          <div class="price-token">
+            <div class="price-icon">🔵</div>
+            <div>
+              <div class="price-name">ETH</div>
+              <div class="price-ticker">Ethereum</div>
+            </div>
+          </div>
+          <div>
+            <div class="price-val" id="ethPrice">$3,421.50</div>
+            <div style="text-align:right;margin-top:2px"><span class="price-change up" id="ethChange">+2.4%</span></div>
+          </div>
+        </div>
+        <div class="price-row" style="margin-top:10px">
+          <div class="price-token">
+            <div class="price-icon" style="background:linear-gradient(135deg,#0055CC,#00C48C)">Ⓑ</div>
+            <div>
+              <div class="price-name">USDC</div>
+              <div class="price-ticker">USD Coin</div>
+            </div>
+          </div>
+          <div>
+            <div class="price-val">$1.000</div>
+            <div style="text-align:right;margin-top:2px"><span class="price-change up">+0.01%</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TRENDING -->
+    <div class="widget">
+      <div class="widget-header">
+        Trending on Base
+        <span class="widget-more">See all</span>
+      </div>
+      <div class="trend-item">
+        <div class="trend-tag">#BaseBuilders</div>
+        <div class="trend-count">2,841 posts</div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-tag">#OnchainSummer</div>
+        <div class="trend-count">1,209 posts</div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-tag">#DeFiAlpha</div>
+        <div class="trend-count">987 posts</div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-tag">#Basefren</div>
+        <div class="trend-count">543 posts</div>
+      </div>
+      <div class="trend-item">
+        <div class="trend-tag">#GaslessFeels</div>
+        <div class="trend-count">312 posts</div>
+      </div>
+    </div>
+
+    <!-- WHO TO FOLLOW -->
+    <div class="widget">
+      <div class="widget-header">
+        Frens to follow
+        <span class="widget-more">More</span>
+      </div>
+      <div id="followList"></div>
+    </div>
+
+  </aside>
+</div>
+
+<!-- MOBILE NAV -->
+<nav class="mobile-nav">
+  <a href="feed.html" class="mobile-nav-item active">
+    <svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.707 2.293a1 1 0 0 0-1.414 0l-7 7a1 1 0 0 0 1.414 1.414L4 10.414V17a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-2a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1v2a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-6.586l.293.293a1 1 0 0 0 1.414-1.414l-7-7z"/></svg>
+    Feed
+  </a>
+  <a href="explore.html" class="mobile-nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+    Explore
+  </a>
+  <a href="#" class="mobile-nav-item" onclick="openComposerMobile()">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+    Post
+  </a>
+  <a href="dm.html" class="mobile-nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+    DMs
+  </a>
+  <a href="profile.html" class="mobile-nav-item">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+    Profile
+  </a>
+</nav>
+
+<!-- TIP MODAL -->
+<div class="modal-overlay" id="tipModal" onclick="closeTipModal(event)">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">⚡ Send a tip</div>
+      <button class="modal-close" onclick="closeTipModalBtn()">✕</button>
+    </div>
+    <div class="modal-to">
+      <div class="modal-to-avatar" id="tipToAvatar">🦊</div>
+      <div>
+        <div class="modal-to-name" id="tipToName">@basewizard</div>
+        <div class="modal-to-addr" id="tipToAddr">0x3a9F••••3F2a</div>
+      </div>
+    </div>
+    <div class="tip-amounts">
+      <div class="tip-amt" onclick="selectAmt(this,'0.001')">0.001 ETH</div>
+      <div class="tip-amt selected" onclick="selectAmt(this,'0.005')">0.005 ETH</div>
+      <div class="tip-amt" onclick="selectAmt(this,'0.01')">0.01 ETH</div>
+      <div class="tip-amt" onclick="selectAmt(this,'0.05')">0.05 ETH</div>
+      <div class="tip-amt" onclick="selectAmt(this,'0.1')">0.1 ETH</div>
+      <div class="tip-amt" onclick="selectAmt(this,'custom')">Custom</div>
+    </div>
+    <div class="tip-custom-wrap">
+      <span class="prefix">ETH</span>
+      <input type="number" id="tipAmt" value="0.005" step="0.001" min="0.001" placeholder="0.000">
+      <span class="tip-suffix" id="tipUsd">≈ $17.11</span>
+    </div>
+    <button class="tip-send-btn" onclick="sendTip()">
+      ⚡ Send tip on Base
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast">
+  <span id="toastIcon">✓</span>
+  <span id="toastMsg">Done!</span>
+</div>
+
+<script>
+// ── DATA ─────────────────────────────────────────────────────
+const POSTS = [
+  {
+    id:1, avatar:'🧙', name:'Defi Wizard', handle:'defiwizard',
+    addr:'0x71C7...3F2a', badge:'whale', badgeLabel:'🐋 Whale',
+    content:'Just bridged 50 ETH to Base in under 10 seconds with zero drama. The L2 experience in 2025 is genuinely insane. <span class="tag">#BaseBuilders</span> <span class="tag">#OnchainSummer</span>',
+    time:'2m', likes:142, reposts:38, replies:21, online:true,
+    tip:true
+  },
+  {
+    id:2, avatar:'🦋', name:'0xLuna', handle:'lunaweb3',
+    addr:'0xA4F1...9B3C', badge:'verified', badgeLabel:'✓ Verified',
+    content:'Hot take: embedded wallets are the biggest UX unlock in Web3 history. No seed phrase, no extensions, no friction. Normal people can finally onboard. <span class="tag">#Basefren</span> just gets it.',
+    time:'8m', likes:89, reposts:24, replies:15, online:false,
+    tip:true
+  },
+  {
+    id:3, avatar:'🤖', name:'BaseBot9000', handle:'basebot',
+    addr:'0xC3D2...1A7E', badge:null,
+    content:'📊 On-chain activity this week:',
+    media:{ label:'Total volume on Base', value:'$2.4B (+18.2% vs last week)' },
+    time:'15m', likes:201, reposts:87, replies:9, online:true,
+    tip:false
+  },
+  {
+    id:4, avatar:'🐺', name:'wolftrader', handle:'wolftrader',
+    addr:'0xF9E8...2C4D', badge:null,
+    content:'First time using <span class="tag">@Basefren</span> and my wallet was ready in literally 30 seconds. Didn\'t install anything. Just... signed up. This is what mass adoption looks like frens 🔵',
+    time:'23m', likes:54, reposts:12, replies:31, online:false,
+    tip:true, isNew:true
+  },
+  {
+    id:5, avatar:'🎭', name:'NFT Maxi', handle:'nftmaxi',
+    addr:'0xB2A1...5E6F', badge:'verified', badgeLabel:'✓ Verified',
+    content:'Reminder that your on-chain wallet IS your identity. Your Basefren profile is tied to your address. Every tip you send, every post you make — it\'s all verifiable. This is the way. <span class="tag">#OnchainSummer</span>',
+    time:'41m', likes:178, reposts:56, replies:44, online:true,
+    tip:true
+  },
+  {
+    id:6, avatar:'⚡', name:'gas.base', handle:'gasbase',
+    addr:'0xD4E3...8A1B', badge:null,
+    content:'Gas fee just now on Base: $0.0003\nGas fee on Ethereum mainnet: $4.20\n\nI rest my case. <span class="tag">#GaslessFeels</span>',
+    time:'1h', likes:432, reposts:211, replies:67, online:false,
+    tip:true
+  },
+];
+
+const FRENS = [
+  { avatar:'🦊', name:'basewizard', handle:'basewizard', addr:'0x3a9F...3F2a' },
+  { avatar:'🐉', name:'drgn.base', handle:'drgnbase', addr:'0xB1C2...7D8E' },
+  { avatar:'🧸', name:'bearmarket', handle:'bearmarket', addr:'0xF2E1...4C5D' },
+  { avatar:'👾', name:'pixelfren', handle:'pixelfren', addr:'0x9A8B...2E3F' },
+];
+
+let postLikes   = {};
+let postReposts = {};
+let followState = {};
+
+// ── RENDER POSTS ─────────────────────────────────────────────
+function renderPosts(posts) {
+  const container = document.getElementById('feedPosts');
+  container.innerHTML = posts.map(p => {
+    const liked    = postLikes[p.id];
+    const reposted = postReposts[p.id];
+    const likes    = (p.likes + (liked ? 1 : 0));
+    const reposts  = (p.reposts + (reposted ? 1 : 0));
+
+    const badgeHTML = p.badge
+      ? `<span class="post-badge badge-${p.badge}">${p.badgeLabel}</span>`
+      : (p.isNew ? `<span class="post-badge badge-new">NEW</span>` : '');
+
+    const mediaHTML = p.media
+      ? `<div class="post-media"><div class="post-media-label">${p.media.label}</div><div class="post-media-value">${p.media.value}</div></div>`
+      : '';
+
+    const tipHTML = p.tip
+      ? `<button class="tip-action" onclick="openTipModal(event,'${p.avatar}','${p.handle}','${p.addr}')">⚡ Tip</button>`
+      : '';
+
+    return `
+      <div class="post-item" id="post-${p.id}">
+        <div class="post-header">
+          <div class="post-avatar" style="background:${avatarBg(p.avatar)}">
+            ${p.avatar}
+            ${p.online ? '<div class="post-avatar-online"></div>' : ''}
+          </div>
+          <div class="post-meta">
+            <div class="post-name-row">
+              <span class="post-name">${p.name}</span>
+              ${badgeHTML}
+              <span class="post-time">${p.time}</span>
+            </div>
+            <div class="post-addr">${p.handle} · ${p.addr}</div>
+          </div>
+        </div>
+        <div class="post-content">${p.content}</div>
+        ${mediaHTML}
+        <div class="post-actions">
+          <button class="post-action ${liked ? 'liked' : ''}" onclick="toggleLike(${p.id})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="${liked ? 'currentColor' : 'none'}" stroke="currentColor" stroke-width="2"><path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/></svg>
+            ${likes}
+          </button>
+          <button class="post-action ${reposted ? 'reposted' : ''}" onclick="toggleRepost(${p.id})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg>
+            ${reposts}
+          </button>
+          <button class="post-action" onclick="showToast('Reply coming soon','info')">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+            ${p.replies}
+          </button>
+          <button class="post-action" onclick="sharePost(${p.id})">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/><line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/></svg>
+          </button>
+          ${tipHTML}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+// ── RENDER FOLLOW LIST ────────────────────────────────────────
+function renderFollowList() {
+  document.getElementById('followList').innerHTML = FRENS.map((f,i) => {
+    const following = followState[i];
+    return `
+      <div class="follow-item">
+        <div class="follow-avatar" style="background:${avatarBg(f.avatar)}">${f.avatar}</div>
+        <div>
+          <div class="follow-name">${f.name}</div>
+          <div class="follow-handle">@${f.handle}</div>
+        </div>
+        <button class="follow-btn ${following ? 'following' : ''}"
+          onclick="toggleFollow(event,${i})">${following ? 'Following' : 'Follow'}</button>
+      </div>`;
+  }).join('');
+}
+
+// ── INTERACTIONS ─────────────────────────────────────────────
+function toggleLike(id) {
+  postLikes[id] = !postLikes[id];
+  renderPosts(POSTS);
+  if (postLikes[id]) showToast('Liked! ❤️', true);
+}
+
+function toggleRepost(id) {
+  postReposts[id] = !postReposts[id];
+  renderPosts(POSTS);
+  if (postReposts[id]) showToast('Reposted! 🔁', true);
+}
+
+function toggleFollow(e, idx) {
+  e.stopPropagation();
+  followState[idx] = !followState[idx];
+  renderFollowList();
+  showToast(followState[idx] ? `Following @${FRENS[idx].handle}!` : `Unfollowed @${FRENS[idx].handle}`, followState[idx]);
+}
+
+function sharePost(id) {
+  navigator.clipboard?.writeText(window.location.href + '#post-' + id)
+    .then(() => showToast('Link copied!', true))
+    .catch(() => showToast('Link copied!', true));
+}
+
+// ── COMPOSER ─────────────────────────────────────────────────
+function updateComposer(el) {
+  const len  = el.value.length;
+  const rem  = 280 - len;
+  const btn  = document.getElementById('postBtn');
+  const cnt  = document.getElementById('charCount');
+  cnt.textContent = rem;
+  cnt.className = 'char-count' + (rem < 20 ? ' warn' : '') + (rem < 0 ? ' over' : '');
+  btn.disabled = len === 0 || rem < 0;
+}
+
+function submitPost() {
+  const text = document.getElementById('composerText').value.trim();
+  if (!text) return;
+  const newPost = {
+    id: Date.now(), avatar:'🐸', name:'crypt0fren', handle:'crypt0fren',
+    addr:'0xYour...addr', badge:null,
+    content: text.replace(/(#\w+)/g,'<span class="tag">$1</span>').replace(/(@\w+)/g,'<span class="tag">$1</span>'),
+    time:'just now', likes:0, reposts:0, replies:0, online:true, tip:false
+  };
+  POSTS.unshift(newPost);
+  renderPosts(POSTS);
+  document.getElementById('composerText').value = '';
+  updateComposer({ value:'' });
+  showToast('Posted! 🎉', true);
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── TABS ──────────────────────────────────────────────────────
+function switchTab(el, tab) {
+  document.querySelectorAll('.feed-tab').forEach(t => t.classList.remove('active'));
+  el.classList.add('active');
+  // In demo just re-render same posts
+  renderPosts(POSTS);
+}
+
+// ── TIP MODAL ─────────────────────────────────────────────────
+function openTipModal(e, avatar, handle, addr) {
+  e.stopPropagation();
+  document.getElementById('tipToAvatar').textContent = avatar;
+  document.getElementById('tipToName').textContent   = '@' + handle;
+  document.getElementById('tipToAddr').textContent   = addr;
+  document.getElementById('tipModal').classList.add('open');
+}
+
+function closeTipModal(e) {
+  if (e.target === document.getElementById('tipModal')) closeTipModalBtn();
+}
+
+function closeTipModalBtn() {
+  document.getElementById('tipModal').classList.remove('open');
+}
+
+function selectAmt(el, val) {
+  document.querySelectorAll('.tip-amt').forEach(a => a.classList.remove('selected'));
+  el.classList.add('selected');
+  if (val !== 'custom') {
+    document.getElementById('tipAmt').value = val;
+    document.getElementById('tipUsd').textContent = '≈ $' + (parseFloat(val) * 3421.5).toFixed(2);
+  } else {
+    document.getElementById('tipAmt').focus();
+  }
+}
+
+document.getElementById('tipAmt').addEventListener('input', function() {
+  const usd = (parseFloat(this.value || 0) * 3421.5).toFixed(2);
+  document.getElementById('tipUsd').textContent = '≈ $' + usd;
+});
+
+function sendTip() {
+  const amt  = document.getElementById('tipAmt').value;
+  const name = document.getElementById('tipToName').textContent;
+  closeTipModalBtn();
+  showToast(`Sent ${amt} ETH to ${name} ⚡`, true);
+}
+
+// ── LOAD MORE ─────────────────────────────────────────────────
+function loadMore() {
+  showToast('Loading more posts...', true);
+  setTimeout(() => renderPosts(POSTS), 600);
+}
+
+// ── HELPERS ──────────────────────────────────────────────────
+function avatarBg(emoji) {
+  const map = {'🧙':'linear-gradient(135deg,#6B21A8,#A855F7)','🦋':'linear-gradient(135deg,#0E7490,#22D3EE)','🤖':'linear-gradient(135deg,#0055CC,#0A84FF)','🐺':'linear-gradient(135deg,#374151,#6B7280)','🎭':'linear-gradient(135deg,#831843,#EC4899)','⚡':'linear-gradient(135deg,#92400E,#F59E0B)','🐸':'linear-gradient(135deg,#0055CC,#0A84FF)','🦊':'linear-gradient(135deg,#9A3412,#F97316)','🐉':'linear-gradient(135deg,#065F46,#10B981)','🧸':'linear-gradient(135deg,#78350F,#D97706)','👾':'linear-gradient(135deg,#312E81,#6366F1)'};
+  return map[emoji] || 'linear-gradient(135deg,#0055CC,#0A84FF)';
+}
+
+function showToast(msg, success = true) {
+  const t = document.getElementById('toast');
+  document.getElementById('toastMsg').textContent  = msg;
+  document.getElementById('toastIcon').textContent = success ? '✓' : '⚡';
+  t.className = 'toast show ' + (success ? 'success' : 'error');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+function openComposerMobile() {
+  document.querySelector('.composer textarea').focus();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── PRICE TICKER SIMULATION ───────────────────────────────────
+function tickPrice() {
+  const base = 3421.5;
+  const delta = (Math.random() - 0.49) * 8;
+  const price = (base + delta).toFixed(2);
+  const pct   = ((delta / base) * 100).toFixed(2);
+  document.getElementById('ethPrice').textContent = '$' + price;
+  const changeEl = document.getElementById('ethChange');
+  changeEl.textContent = (delta >= 0 ? '+' : '') + pct + '%';
+  changeEl.className   = 'price-change ' + (delta >= 0 ? 'up' : 'down');
+}
+
+// ── INIT ─────────────────────────────────────────────────────
+renderPosts(POSTS);
+renderFollowList();
+setInterval(tickPrice, 4000);
+</script>
+</body>
+</html>
